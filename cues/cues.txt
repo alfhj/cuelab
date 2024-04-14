@@ -1,13 +1,15 @@
+# blank lines and lines starting with # are ignored
 red.png
 green.png
 blue.png
 black.png
 smpte.png
 
-# blank lines and lines starting with # are ignored
-
+# subtitles are specified with quotation marks and will be converted to PNG files
 "line 1"
 "line 2"
 "multiple\nlines"
 
-# subtitles are specified with quotation marks
+# audio files
+LICENCE.mp3
+pink_noise.flac
