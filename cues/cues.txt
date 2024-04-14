@@ -1,0 +1,13 @@
+red.png
+green.png
+blue.png
+black.png
+smpte.png
+
+# blank lines and lines starting with # are ignored
+
+"line 1"
+"line 2"
+"multiple\nlines"
+
+# subtitles are specified with quotation marks
