@@ -5,7 +5,7 @@ from rich.live import Live
 from rich.panel import Panel
 from readchar import readkey
 from readchar import key as special_keys
-from . import lorem
+from .utils import get_filelist
 
 console = Console()
 
@@ -14,14 +14,6 @@ def make_layout() -> Layout:
     root = Layout(name="root")
     root.split_row(Layout(name="left"), Layout(name="right"))
     return root
-
-
-def get_filelist(filename: str) -> list[str]:
-    with open(filename, "r", encoding="utf-8") as f:
-        contents = f.read().splitlines()
-    
-    return list(filter(lambda l: not(l.strip() == "" or l.startswith("#")), contents))
-    #return [lorem.ipsum() for _ in range(100)]
 
 
 def get_debug_panel(**kwargs):
@@ -78,7 +70,7 @@ def handle_keypress():
     global max_index
 
     key = readkey()
-   
+
     if key == special_keys.UP:
         selected_index = max(selected_index - 1, 0)
     if key == special_keys.DOWN:
@@ -108,15 +100,14 @@ def update_view(live: Live, layout: Layout, pressed_key: bool = None):
     layout["right"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, local_s=i2, local_p=i3, height=height))
     live.refresh()
 
-def run(cues_dir, cues_file):
+
+def run():
     global filelist
     global selected_index
     global playing_index
     global max_index
-    
-    cues_path = Path(cues_dir)
-    cues_file_path = cues_path.joinpath(cues_file)
-    filelist = get_filelist(str(cues_file_path))
+
+    filelist = get_filelist()
     selected_index = 0
     playing_index = 0
     max_index = len(filelist) - 1
