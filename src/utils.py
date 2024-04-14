@@ -1,6 +1,10 @@
+import os
 from pathlib import Path
-from config import CUES_DIR, CUES_FILE
+import shutil
+from config import BINARY_PATH, CUES_DIR, CUES_FILE
 from . import lorem
+
+BINARIES = {"ffmpeg": "", "mpv": ""}
 
 
 def get_filelist() -> list[str]:
@@ -12,3 +16,15 @@ def get_filelist() -> list[str]:
 
     return list(filter(lambda l: not (l.strip() == "" or l.startswith("#")), contents))
     # return [lorem.ipsum() for _ in range(100)]
+
+
+def get_binaries():
+    files = os.listdir(BINARY_PATH)
+    for binary in BINARIES:
+        if local_file := next((f for f in files if f.startswith(binary)), None):
+            BINARIES[binary] = local_file
+            continue
+        elif path_file := shutil.which(binary):
+            BINARIES[binary] = path_file
+        else:
+            raise FileNotFoundError(f'{binary} was not found in "{BINARY_PATH}" or PATH')

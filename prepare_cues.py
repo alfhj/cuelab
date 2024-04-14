@@ -1,38 +1,23 @@
 from pathlib import Path
-import subprocess
-import os
 import shutil
-import time
 from PIL import Image, ImageDraw, ImageFont
 
-from config import BINARY_PATH, CUES_DIR, OUTPUT_DIR, WIDTH, HEIGHT, FONT, FONT_SIZE, FONT_POSITION
+from config import CUES_DIR, OUTPUT_DIR, WIDTH, HEIGHT, FONT, FONT_SIZE, FONT_POSITION, LINE_SPACING
 from src.utils import get_filelist
-
-
-BINARIES = {"ffmpeg": "", "mpv": ""}
-
-
-def get_binaries():
-    files = os.listdir(BINARY_PATH)
-    for binary in BINARIES:
-        if local_file := next((f for f in files if f.startswith(binary)), None):
-            BINARIES[binary] = local_file
-            continue
-        elif path_file := shutil.which(binary):
-            BINARIES[binary] = path_file
-        else:
-            raise FileNotFoundError(f'{binary} was not found in "{BINARY_PATH}" or PATH')
 
 
 def generate_text_image(text: str, output_path: str | Path):
     img = Image.new("RGB", (WIDTH, HEIGHT), color="black")
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT, FONT_SIZE)
-    x = (WIDTH - draw.textlength(text, font)) / 2
-    y = (HEIGHT - FONT_SIZE) * (100 - FONT_POSITION) / 100
-    draw.text((x, y), text, fill="white", font=font)
+
+    y_top = HEIGHT * FONT_POSITION / 100
+    for i, line in enumerate(text.split("\\n")):
+        x = (WIDTH - draw.textlength(line, font)) / 2
+        y = y_top + i * FONT_SIZE * LINE_SPACING
+        draw.text((x, y), line, fill="white", font=font)
+
     img.save(output_path)
-    # os.startfile("text_image.png")
 
 
 def clean_output_dir(output_dir: Path):
@@ -42,9 +27,6 @@ def clean_output_dir(output_dir: Path):
 
 
 if __name__ == "__main__":
-    get_binaries()
-    # print(BINARIES)
-
     output_dir = Path(OUTPUT_DIR)
     if not output_dir.is_dir():
         print(f'Making output directory "{output_dir}"')
