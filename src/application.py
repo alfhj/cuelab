@@ -106,18 +106,17 @@ def start():
     global playing_index
     global max_index
 
-    get_binaries()
     filelist = get_filelist()
     selected_index = 0
     playing_index = None
     max_index = len(filelist) - 1
 
-    #start_mpv(BINARIES["mpv"], OUTPUT_DIR)
-    layout = make_layout()
+    start_mpv()
+    #layout = make_layout()
 
-    with Live(layout, screen=True, auto_refresh=False) as live:
-        update_view(live, layout)
+    #with Live(layout, screen=True, auto_refresh=False) as live:
+    #    update_view(live, layout)
 
-        while True:
-            key = handle_keypress()
-            update_view(live, layout, key)
+    #    while True:
+    #        key = handle_keypress()
+    #        update_view(live, layout, key)

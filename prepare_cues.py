@@ -36,6 +36,7 @@ if __name__ == "__main__":
         clean_output_dir(output_dir)
 
     print(f'Copying files to "{output_dir}"')
+    playlist = ""
     filelist = get_filelist()
     for i, filename in enumerate(filelist):
         print(f"{i+1} / {len(filelist)}")
@@ -50,3 +51,8 @@ if __name__ == "__main__":
                 raise FileNotFoundError(f'Cue {filename} not found in "{CUES_DIR}"')
             output_path = output_dir.joinpath(base + input_path.suffix)
             shutil.copy(input_path, output_path)
+       
+        playlist += str(output_path.name) + "\n"
+
+    with open(output_dir.joinpath("playlist.txt"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(playlist)
