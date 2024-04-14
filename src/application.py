@@ -1,13 +1,12 @@
-from pathlib import Path
-from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
 from readchar import readkey
 from readchar import key as special_keys
-from .utils import get_filelist
 
-console = Console()
+from config import OUTPUT_DIR
+from .utils import get_filelist, get_binaries, BINARIES
+from .playback import start_mpv
 
 
 def make_layout() -> Layout:
@@ -36,15 +35,13 @@ def get_visible_filelist(filelist: list[str], number_visible: int, selected_inde
         filelist (list[str]): complete list of filenames
         number_visible (int): number of files which are visible, usually around terminal height
         index (int): index of the file currently selected
-        playing_index (int): index of the file currently playing. Defaults to index
+        playing_index (int): index of the file currently playing
         middle_index (int): index along the output where the currently selected file should appear. Defaults to number_visible // 2
 
     Returns:
         str: newline-separated string of filenames
     """
 
-    if playing_index is None:
-        playing_index = selected_index
     if middle_index is None:
         middle_index = number_visible // 2
     assert middle_index < number_visible
@@ -52,9 +49,9 @@ def get_visible_filelist(filelist: list[str], number_visible: int, selected_inde
     from_index = max(selected_index - middle_index, 0)
     lines = filelist[from_index:]  # rich will take care of cutting off the rest
     local_selected_index = selected_index - from_index
-    local_playing_index = playing_index - from_index
+    local_playing_index = playing_index - from_index if playing_index is not None else None
     for i in range(len(lines)):
-        if i == local_playing_index:
+        if local_playing_index is not None and i == local_playing_index:
             lines[i] = f"[bright_yellow]{lines[i]}[/]"
         elif i == local_selected_index:
             lines[i] = lines[i]
@@ -81,6 +78,8 @@ def handle_keypress():
         else:
             playing_index = min(playing_index + 1, max_index)
             selected_index = playing_index
+    if key == special_keys.ESC or key == special_keys.ESC_2:
+        playing_index = None
     if key == "w" or key == "W":
         playing_index = max(playing_index - 1, 0)
     if key == "s" or key == "S":
@@ -107,10 +106,13 @@ def start():
     global playing_index
     global max_index
 
+    get_binaries()
     filelist = get_filelist()
     selected_index = 0
-    playing_index = 0
+    playing_index = None
     max_index = len(filelist) - 1
+
+    #start_mpv(BINARIES["mpv"], OUTPUT_DIR)
     layout = make_layout()
 
     with Live(layout, screen=True, auto_refresh=False) as live:
