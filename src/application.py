@@ -101,7 +101,7 @@ def update_view(live: Live, layout: Layout, pressed_key: bool = None):
     live.refresh()
 
 
-def run():
+def start():
     global filelist
     global selected_index
     global playing_index
