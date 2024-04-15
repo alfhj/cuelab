@@ -1,10 +1,14 @@
 import os
 from pathlib import Path
 import shutil
-from config import BINARY_PATH, CUES_DIR, CUES_FILE
+from config import BINARY_PATH, CUES_DIR, CUES_FILE, OUTPUT_DIR
 from . import lorem
 
 BINARIES = {"ffmpeg": "", "mpv": ""}
+
+
+def generate_filename(i, ext=".png"):
+    return str(i).zfill(5) + ext
 
 
 def get_filelist() -> list[str]:
@@ -18,6 +22,16 @@ def get_filelist() -> list[str]:
     # return [lorem.ipsum() for _ in range(100)]
 
 
+def get_filelist_file(filelist: list[str], index: int):
+    filename = filelist[index]
+    if not filename.startswith('"'):
+        path = Path(CUES_DIR).joinpath(filename)
+    else:
+        num_previous_text_cues = sum(1 for i, cue in enumerate(filelist) if cue.startswith('"') and i < index)
+        path = Path(OUTPUT_DIR).joinpath(generate_filename(num_previous_text_cues))
+    return str(path)
+
+
 def get_binaries():
     files = os.listdir(BINARY_PATH)
     for binary in BINARIES:
@@ -25,6 +39,6 @@ def get_binaries():
             BINARIES[binary] = local_file
             continue
         elif path_file := shutil.which(binary):
-            BINARIES[binary] = path_file
+            BINARIES[binary] = path_file#.replace("COM", "EXE")
         else:
             raise FileNotFoundError(f'{binary} was not found in "{BINARY_PATH}" or PATH')

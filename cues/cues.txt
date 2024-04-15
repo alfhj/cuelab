@@ -11,5 +11,10 @@ smpte.png
 "multiple\nlines"
 
 # audio files
-LICENCE.mp3
+LICENSE.mp3
 pink_noise.flac
+
+# video files
+bbb_sunflower_1080p_30fps_normal_avc-512.mp4
+bbb_sunflower_1080p_30fps_normal_hevc-512.mp4
+bbb_sunflower_1080p_30fps_normal_av1-512.mp4

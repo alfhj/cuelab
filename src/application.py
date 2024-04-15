@@ -4,8 +4,7 @@ from rich.panel import Panel
 from readchar import readkey
 from readchar import key as special_keys
 
-from config import OUTPUT_DIR
-from .utils import get_filelist, get_binaries, BINARIES
+from .utils import get_filelist, get_filelist_file
 from .playback import start_mpv
 
 
@@ -14,6 +13,7 @@ def make_layout() -> Layout:
     root.split_row(Layout(name="left"), Layout(name="right"))
     root["right"].split_column(Layout(name="upper"), Layout(name="lower"))
     root["upper"].size = 10
+    root["lower"].update(Panel(""))
     return root
 
 
@@ -63,7 +63,8 @@ def get_visible_filelist(filelist: list[str], number_visible: int, selected_inde
     return "\n".join(lines), from_index, local_selected_index, local_playing_index
 
 
-def handle_keypress():
+def handle_keypress(mpv):
+    global filelist
     global selected_index
     global playing_index
     global max_index
@@ -72,25 +73,26 @@ def handle_keypress():
 
     if key == special_keys.UP:
         selected_index = max(selected_index - 1, 0)
+
     if key == special_keys.DOWN:
         selected_index = min(selected_index + 1, max_index)
+
     if key == special_keys.SPACE:
         if selected_index != playing_index:
             playing_index = selected_index
         else:
             playing_index = min(playing_index + 1, max_index)
             selected_index = playing_index
-    if key == special_keys.ESC or key == special_keys.ESC_2:
+        mpv.play(get_filelist_file(filelist, playing_index))
+
+    if key == special_keys.ESC:
         playing_index = None
-    if key == "w" or key == "W":
-        playing_index = max(playing_index - 1, 0)
-    if key == "s" or key == "S":
-        playing_index = min(playing_index + 1, max_index)
+        mpv.stop()
 
     return key
 
 
-def update_view(live: Live, layout: Layout, pressed_key: bool = None):
+def update_layout(live: Live, layout: Layout, pressed_key: bool = None):
     global filelist
 
     height = live.console.height - 2
@@ -99,7 +101,6 @@ def update_view(live: Live, layout: Layout, pressed_key: bool = None):
     visible_filelist, i1, i2, i3 = get_visible_filelist(filelist, height, selected_index, playing_index)
     layout["left"].update(Panel(visible_filelist))
     layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, local_s=i2, local_p=i3, height=height))
-    layout["lower"].update(Panel(""))
     live.refresh()
 
 
@@ -113,13 +114,16 @@ def start():
     selected_index = 0
     playing_index = None
     max_index = len(filelist) - 1
-
     layout = make_layout()
 
-    with Live(layout, screen=True, auto_refresh=False) as live:
-        start_mpv(live, layout)
-    #    update_view(live, layout)
+    with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
+        mpv, _ = start_mpv(live, layout)
+        update_layout(live, layout)
 
-    #    while True:
-    #        key = handle_keypress()
-    #        update_view(live, layout, key)
+        while True:
+            try:
+                key = handle_keypress(mpv)
+                update_layout(live, layout, key)
+            except KeyboardInterrupt:
+                mpv.quit()
+                quit()

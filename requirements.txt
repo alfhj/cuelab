@@ -1,2 +1,3 @@
+python-mpv-jsonipc
 readchar
 rich
