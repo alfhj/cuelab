@@ -13,6 +13,8 @@ def make_layout() -> Layout:
     root.split_row(Layout(name="left"), Layout(name="right"))
     root["right"].split_column(Layout(name="upper"), Layout(name="lower"))
     root["upper"].size = 10
+    root["left"].update(Panel(""))
+    root["upper"].update(Panel(""))
     root["lower"].update(Panel(""))
     return root
 
@@ -78,11 +80,13 @@ def handle_keypress(mpv):
         selected_index = min(selected_index + 1, max_index)
 
     if key == special_keys.SPACE:
-        if selected_index != playing_index:
-            playing_index = selected_index
-        else:
-            playing_index = min(playing_index + 1, max_index)
-            selected_index = playing_index
+        #if selected_index != playing_index:
+        #    playing_index = selected_index
+        #else:
+        #    playing_index = min(playing_index + 1, max_index)
+        #    selected_index = playing_index
+        playing_index = selected_index
+        selected_index = min(selected_index + 1, max_index)
         mpv.play(get_filelist_file(filelist, playing_index))
 
     if key == special_keys.ESC:
@@ -100,7 +104,7 @@ def update_layout(live: Live, layout: Layout, pressed_key: bool = None):
         pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
     visible_filelist, i1, i2, i3 = get_visible_filelist(filelist, height, selected_index, playing_index)
     layout["left"].update(Panel(visible_filelist))
-    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, local_s=i2, local_p=i3, height=height))
+    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, height=height))
     live.refresh()
 
 
@@ -118,6 +122,15 @@ def start():
 
     with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
         mpv, _ = start_mpv(live, layout)
+
+        @mpv.property_observer("eof-reached")
+        def handle_eof(name, value):
+            global playing_index
+            if value == True:
+                mpv.stop()
+                playing_index = None
+                update_layout(live, layout)
+        
         update_layout(live, layout)
 
         while True:

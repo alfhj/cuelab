@@ -1,5 +1,6 @@
 from io import StringIO
 import logging
+import os
 from rich.panel import Panel
 from rich.text import Text
 from python_mpv_jsonipc import MPV
@@ -64,7 +65,9 @@ def start_mpv(live, layout):
     
     extra_config = {
         "config": "no",
-        "include": "bin/mpv.conf"
+        "include": "bin/mpv.conf",
+        "vo": "gpu" if os.name == "nt" else "x11"
     }
     mpv = MPV(mpv_location=BINARIES["mpv"], loglevel="info", log_handler=log_mpv, **extra_config)
+    
     return mpv, log_stream
