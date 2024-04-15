@@ -21,7 +21,7 @@ def get_filelist() -> list[str]:
 def get_binaries():
     files = os.listdir(BINARY_PATH)
     for binary in BINARIES:
-        if local_file := next((f for f in files if f.startswith(binary)), None):
+        if local_file := next((f for f in files if f.startswith(binary) and os.access(f, os.X_OK)), None):
             BINARIES[binary] = local_file
             continue
         elif path_file := shutil.which(binary):

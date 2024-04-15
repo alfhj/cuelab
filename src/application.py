@@ -12,6 +12,8 @@ from .playback import start_mpv
 def make_layout() -> Layout:
     root = Layout(name="root")
     root.split_row(Layout(name="left"), Layout(name="right"))
+    root["right"].split_column(Layout(name="upper"), Layout(name="lower"))
+    root["upper"].size = 10
     return root
 
 
@@ -96,7 +98,8 @@ def update_view(live: Live, layout: Layout, pressed_key: bool = None):
         pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
     visible_filelist, i1, i2, i3 = get_visible_filelist(filelist, height, selected_index, playing_index)
     layout["left"].update(Panel(visible_filelist))
-    layout["right"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, local_s=i2, local_p=i3, height=height))
+    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, local_s=i2, local_p=i3, height=height))
+    layout["lower"].update(Panel(""))
     live.refresh()
 
 
@@ -111,10 +114,10 @@ def start():
     playing_index = None
     max_index = len(filelist) - 1
 
-    start_mpv()
-    #layout = make_layout()
+    layout = make_layout()
 
-    #with Live(layout, screen=True, auto_refresh=False) as live:
+    with Live(layout, screen=True, auto_refresh=False) as live:
+        start_mpv(live, layout)
     #    update_view(live, layout)
 
     #    while True:
