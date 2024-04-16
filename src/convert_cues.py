@@ -89,7 +89,7 @@ def get_media_info(file_path):
     media_length = float(info["format"]["duration"]) if "duration" in info["format"] else 0
     if media_type == "video" and media_length == 0:
         media_type = "image"
-    
+
     return media_type, media_length
 
 
@@ -103,7 +103,7 @@ def metadata_is_updated(metadata: dict):
 def convert() -> dict:
     """ Converts text cues and generates a metadata file for all cues containing the following information:
     - Type of cue
-    - Length of cue for audio and video cues in seconds
+    - Duration of cue for audio and video cues in seconds (0=inf)
     - Path of cue media, relative to CUES_DIR
         - For text cues: which PNG file in OUTPUT_DIR that corresponds to the cue
     Example:
@@ -111,9 +111,10 @@ def convert() -> dict:
         "hash": "1a2b3c4d",
         "cues": [
             {
+                "name": "babyshark.mp3",
                 "type": "audio",
-                "length": 92,
-                "path": "babyshark.mp3"
+                "duration": 92,
+                "path": "cues/babyshark.mp3"
             }
         ]
     }
@@ -144,18 +145,20 @@ def convert() -> dict:
             output_path = output_dir.joinpath(generate_filename(i))
             generate_text_image(text, output_path)
             metadata["cues"].append({
+                "name": filename,
                 "type": "text",
-                "length": 0,
+                "duration": 0,
                 "path": str(output_path)
             })
         else:
             file_path = Path(CUES_DIR).joinpath(filename)
             if not file_path.is_file():
                 raise FileNotFoundError(f'File "{filename}" was not found')
-            media_type, media_length = get_media_info(file_path)
+            media_type, media_duration = get_media_info(file_path)
             metadata["cues"].append({
+                "name": filename,
                 "type": media_type,
-                "length": media_length,
+                "duration": media_duration,
                 "path": str(file_path)
             })
 

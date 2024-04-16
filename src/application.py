@@ -1,10 +1,11 @@
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
+from rich.columns import Columns
+from rich.text import Text
 from readchar import readkey
 from readchar import key as special_keys
 
-from .utils import get_filelist
 from .playback import start_mpv
 
 
@@ -32,11 +33,12 @@ def get_book_variable_module_name(module_name):
     return book
 
 
-def get_visible_filelist(filelist: list[str], number_visible: int, selected_index: int, playing_index=None, middle_index: int = None) -> list[str]:
+def get_visible_filelist(cues: list, width: int, number_visible: int, selected_index: int, playing_index=None, middle_index: int = None) -> list[str]:
     """Gets the list of files which are visible within a certain number of lines
 
     Args:
-        filelist (list[str]): complete list of filenames
+        cues (list): metadata for each cue
+        width (int): horizontal width of the left panel
         number_visible (int): number of files which are visible, usually around terminal height
         index (int): index of the file currently selected
         playing_index (int): index of the file currently playing
@@ -51,22 +53,26 @@ def get_visible_filelist(filelist: list[str], number_visible: int, selected_inde
     assert middle_index < number_visible
 
     from_index = max(selected_index - middle_index, 0)
-    lines = filelist[from_index:]  # rich will take care of cutting off the rest
     local_selected_index = selected_index - from_index
     local_playing_index = playing_index - from_index if playing_index is not None else None
-    for i in range(len(lines)):
+    visible_cues = cues[from_index:]  # rich will take care of cutting off the rest
+    lines = Text()
+    durations = Text(justify="right")
+    for i in range(len(visible_cues)):
         if local_playing_index is not None and i == local_playing_index:
-            lines[i] = f"[bright_yellow]{lines[i]}[/]"
+            style = "bright_yellow"
         elif i == local_selected_index:
-            lines[i] = lines[i]
+            style = None
         else:
-            lines[i] = f"[grey50]{lines[i]}[/]"
+            style = "grey50"
+        minutes, seconds = divmod(int(visible_cues[i]["duration"]), 60)
+        lines.append(visible_cues[i]["name"] + "\n", style=style)
+        durations.append(f"{minutes}:{seconds:02}\n", style=style)
 
-    return "\n".join(lines), from_index, local_selected_index, local_playing_index
+    return lines, durations
 
 
-def handle_keypress(mpv, metadata):
-    global filelist
+def handle_keypress(mpv, cues):
     global selected_index
     global playing_index
     global max_index
@@ -87,7 +93,7 @@ def handle_keypress(mpv, metadata):
         #    selected_index = playing_index
         playing_index = selected_index
         selected_index = min(selected_index + 1, max_index)
-        mpv.play(metadata["cues"][playing_index]["path"])
+        mpv.play(cues[playing_index]["path"])
 
     if key == special_keys.ESC:
         playing_index = None
@@ -104,48 +110,46 @@ def handle_keypress(mpv, metadata):
     return key
 
 
-def update_layout(live: Live, layout: Layout, pressed_key: bool = None):
+def update_layout(live: Live, layout: Layout, cues: list, pressed_key: bool = None):
     global filelist
 
     height = live.console.height - 2
     if pressed_key:
         pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
-    visible_filelist, i1, i2, i3 = get_visible_filelist(filelist, height, selected_index, playing_index)
-    layout["left"].update(Panel(visible_filelist))
-    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, fromi=i1, height=height))
+    visible_filelist, visible_durations = get_visible_filelist(cues, 0, height, selected_index, playing_index)
+    layout["left"].update(Panel(Columns([visible_filelist, visible_durations], expand=True)))
+    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, height=height))
     live.refresh()
 
 
-def start(metadata: dict):
-    global filelist
+def start(cues: list):
     global selected_index
     global playing_index
     global max_index
     global screen_number
 
-    filelist = get_filelist()
     selected_index = 0
     playing_index = None
-    max_index = len(filelist) - 1
+    max_index = len(cues) - 1
     screen_number = 0
     layout = make_layout()
 
     with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
-        update_layout(live, layout)
+        update_layout(live, layout, cues)
         mpv, _ = start_mpv(live, layout)
 
-        @mpv.property_observer("eof-reached")
+        @ mpv.property_observer("eof-reached")
         def handle_eof(name, value):
             global playing_index
             if value == True:
                 mpv.stop()
                 playing_index = None
-                update_layout(live, layout)
+                update_layout(live, layout, cues)
 
         while True:
             try:
-                key = handle_keypress(mpv, metadata)
-                update_layout(live, layout, key)
+                key = handle_keypress(mpv, cues)
+                update_layout(live, layout, cues, key)
             except KeyboardInterrupt:
                 mpv.quit()
                 quit()
