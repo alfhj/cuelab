@@ -16,6 +16,4 @@ pink_noise.flac
 
 # video files
 bbb_5s.mkv
-bbb_sunflower_1080p_30fps_normal_avc-512.mp4
-bbb_sunflower_1080p_30fps_normal_hevc-512.mp4
-bbb_sunflower_1080p_30fps_normal_av1-512.mp4
+bbb_sunflower_1080p_30fps_normal_av1.mp4
