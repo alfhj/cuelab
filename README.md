@@ -38,6 +38,7 @@ Keyboard shortcuts:
 
 - [ ] Prevent mpv from taking focus when starting cuelab
 - [ ] Show icon and length of each cue and update currently playing position
+- [ ] Support playback of multiple cues at the same time
 
 ### Acknowledgements
 
