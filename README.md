@@ -1,20 +1,46 @@
 # cuelab
-Cross-platform QLab alternative using the terminal, built using Python and MPV
+
+Cross-platform QLab alternative running in the terminal, built using Python and MPV
 
 The program works by playing files in `cues/cues.txt` with a terminal file selector
 
 Text cues start with `"` and are converted to PNG files using a white font on a black background and placed in `cues/temp`
 
+### Requirements
+
+- Python 3
+- mpv (download [here](https://mpv.io/installation/) or use your preferred package manager)
+- ffprobe (download [here](https://www.gyan.dev/ffmpeg/builds/) or use your preferred package manager)
+
 ### Installation
-- Install `python`
-- Install `mpv` or drag a `mpv` executable into `bin`
+
+```
+git clone https://github.com/alfhj/cuelab.git
+cd cuelab
+pip install -r requirements.txt
+```
+- Install `mpv` and `ffprobe` or drag their executable files into `bin`
 
 ### Usage
 
 `python run.py`
 
-To convert text cues for the first time: `python run.py --convert-text`. This must be run when text cues are changed. The program will assume the PNG files in `cues/temp` are in the same order as in `cues/cues.txt`
+Cuelab will automatically convert text cues and metadata will be generated for other cues using `ffprobe`
+
+Keyboard shortcuts:
+- `UP`/`DOWN`: select previous/next cue
+- `Space`: play the currently selected cue and advance selection
+- `Esc`: stop playback and advance selection
+- `f`: toggle fullscreen
+- `0`-`9`: show media on specified screen. Usually, 0 = primary screen, 1 = secondary screen etc.
 
 ### TODO
+
 - [ ] Prevent mpv from taking focus when starting cuelab
 - [ ] Show icon and length of each cue and update currently playing position
+
+### Acknowledgements
+
+Built using [rich](https://github.com/Textualize/rich), [python-readchar](https://github.com/magmax/python-readchar) and [python-mpv-jsonipc](https://github.com/iwalton3/python-mpv-jsonipc)
+
+Test media are (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
