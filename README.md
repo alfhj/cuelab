@@ -14,3 +14,7 @@ Text cues start with `"` and are converted to PNG files using a white font on a 
 `python run.py`
 
 To convert text cues for the first time: `python run.py --convert-text`. This must be run when text cues are changed. The program will assume the PNG files in `cues/temp` are in the same order as in `cues/cues.txt`
+
+### TODO
+- [ ] Prevent mpv from taking focus when starting cuelab
+- [ ] Show icon and length of each cue and update currently playing position

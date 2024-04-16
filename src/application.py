@@ -4,7 +4,7 @@ from rich.panel import Panel
 from readchar import readkey
 from readchar import key as special_keys
 
-from .utils import get_filelist, get_filelist_file
+from .utils import get_filelist
 from .playback import start_mpv
 
 
@@ -60,12 +60,12 @@ def get_visible_filelist(filelist: list[str], number_visible: int, selected_inde
         elif i == local_selected_index:
             lines[i] = lines[i]
         else:
-            lines[i] = f"[bright_black]{lines[i]}[/]"
+            lines[i] = f"[grey50]{lines[i]}[/]"
 
     return "\n".join(lines), from_index, local_selected_index, local_playing_index
 
 
-def handle_keypress(mpv):
+def handle_keypress(mpv, metadata):
     global filelist
     global selected_index
     global playing_index
@@ -87,11 +87,19 @@ def handle_keypress(mpv):
         #    selected_index = playing_index
         playing_index = selected_index
         selected_index = min(selected_index + 1, max_index)
-        mpv.play(get_filelist_file(filelist, playing_index))
+        mpv.play(metadata["cues"][playing_index]["path"])
 
     if key == special_keys.ESC:
         playing_index = None
         mpv.stop()
+
+    if key == "f":
+        mpv.cycle("fullscreen")
+
+    if key in [str(i) for i in range(10)]:
+        mpv.set("fullscreen", "no")
+        mpv.set("fs-screen", key)
+        mpv.set("fullscreen", "yes")
 
     return key
 
@@ -108,19 +116,22 @@ def update_layout(live: Live, layout: Layout, pressed_key: bool = None):
     live.refresh()
 
 
-def start():
+def start(metadata: dict):
     global filelist
     global selected_index
     global playing_index
     global max_index
+    global screen_number
 
     filelist = get_filelist()
     selected_index = 0
     playing_index = None
     max_index = len(filelist) - 1
+    screen_number = 0
     layout = make_layout()
 
     with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
+        update_layout(live, layout)
         mpv, _ = start_mpv(live, layout)
 
         @mpv.property_observer("eof-reached")
@@ -130,12 +141,10 @@ def start():
                 mpv.stop()
                 playing_index = None
                 update_layout(live, layout)
-        
-        update_layout(live, layout)
 
         while True:
             try:
-                key = handle_keypress(mpv)
+                key = handle_keypress(mpv, metadata)
                 update_layout(live, layout, key)
             except KeyboardInterrupt:
                 mpv.quit()
