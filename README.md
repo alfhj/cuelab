@@ -8,7 +8,7 @@ Text cues start with `"` and are converted to PNG files using a white font on a 
 
 ### Requirements
 
-- Python 3
+- Python ≥ 3.8
 - mpv (download [here](https://mpv.io/installation/) or use your preferred package manager)
 - ffprobe (download [here](https://www.gyan.dev/ffmpeg/builds/) or use your preferred package manager)
 
@@ -40,6 +40,7 @@ Keyboard shortcuts:
 - [ ] Show icon and length of each cue and update currently playing position
 - [ ] Support playback of multiple cues at the same time
 - [ ] Option to rescale the output to fit the projection surface
+- [ ] Improve loading of first cue
 
 ### Acknowledgements
 
