@@ -7,8 +7,10 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .gui import Filelist
-from .constants import MEDIA_TYPE_EMOJI_MAP
+from config import CUE_LIST_MIDDLE
+
+from .entities import Cue
+from .gui import CueList
 from .playback import start_mpv
 
 
@@ -17,9 +19,11 @@ def make_layout() -> Layout:
     root.split_row(Layout(name="left"), Layout(name="right"))
     root["right"].split_column(Layout(name="upper"), Layout(name="lower"))
     root["upper"].size = 10
+
     root["left"].update(Panel(""))
     root["upper"].update(Panel(""))
     root["lower"].update(Panel(""))
+
     return root
 
 
@@ -50,65 +54,26 @@ def get_visible_filelist(cues: list, width: int, number_visible: int, selected_i
     Returns:
         str: newline-separated string of filenames
     """
-
-    if middle_index is None:
-        middle_index = number_visible // 2
-    assert middle_index < number_visible
-
-    from_index = max(selected_index - middle_index, 0)
-    local_selected_index = selected_index - from_index
-    local_playing_index = playing_index - from_index if playing_index is not None else None
-    visible_cues = cues[from_index:]  # rich will take care of cutting off the rest
-    lines = Text()
-    durations = Text(justify="right")
-    grid = Table.grid(expand=True)
-    grid.add_column(no_wrap=False, overflow="crop")
-    grid.add_column(justify="right")
-    for i in range(len(visible_cues)):
-        if local_playing_index is not None and i == local_playing_index:
-            style = "bright_yellow"
-        elif i == local_selected_index:
-            style = None
-        else:
-            style = "grey50"
-        minutes, seconds = divmod(int(visible_cues[i]["duration"]), 60)
-        icon = MEDIA_TYPE_EMOJI_MAP[visible_cues[i]["type"]]
-        lines.append(visible_cues[i]["name"][:10] + "\n", style=style)
-        durations.append(f"{minutes}:{seconds:02} {icon}\n", style=style)
-        if style:
-            grid.add_row(f"[{style}]{visible_cues[i]['name']}[/]", f"[{style}]{minutes}:{seconds:02} {icon}[/]")
-        else:
-            grid.add_row(visible_cues[i]["name"], f"{minutes}:{seconds:02} {icon}")
-
-    #return Columns([lines, durations], expand=True)
-    return grid
+    pass
 
 
-def handle_keypress(mpv, cues):
-    global selected_index
-    global playing_index
-    global max_index
+def handle_keypress(mpv):
+    global cue_list
 
     key = readkey()
 
     if key == special_keys.UP:
-        selected_index = max(selected_index - 1, 0)
+        cue_list.select_previous()
 
     if key == special_keys.DOWN:
-        selected_index = min(selected_index + 1, max_index)
+        cue_list.select_next()
 
     if key == special_keys.SPACE:
-        #if selected_index != playing_index:
-        #    playing_index = selected_index
-        #else:
-        #    playing_index = min(playing_index + 1, max_index)
-        #    selected_index = playing_index
-        playing_index = selected_index
-        selected_index = min(selected_index + 1, max_index)
-        mpv.play(cues[playing_index]["path"])
+        cue = cue_list.play_selected()
+        mpv.play(cue.path)
 
     if key == special_keys.ESC:
-        playing_index = None
+        cue_list.stop_playing()
         mpv.stop()
 
     if key == "f":
@@ -122,46 +87,41 @@ def handle_keypress(mpv, cues):
     return key
 
 
-def update_layout(live: Live, layout: Layout, cues: list, pressed_key: bool = None):
-    global filelist
+def update_layout(live: Live, layout: Layout, pressed_key: str = None):
+    global cue_list
 
-    height = live.console.height - 2
     if pressed_key:
         pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
-    filelist = get_visible_filelist(cues, 0, height, selected_index, playing_index)
-    layout["left"].update(Panel(filelist))
-    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, height=height))
+    layout["left"].update(Panel(cue_list))
+    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=cue_list.selected_index, playing_index=cue_list.playing_index))
     live.refresh()
 
 
 def start(cues: list):
-    global selected_index
-    global playing_index
-    global max_index
+    global cue_list
     global screen_number
 
-    selected_index = 0
-    playing_index = None
-    max_index = len(cues) - 1
+    cue_list = CueList(cues, middle_position=CUE_LIST_MIDDLE/100)
     screen_number = 0
     layout = make_layout()
 
     with Live(layout, screen=True, auto_refresh=False, refresh_per_second=4, vertical_overflow="crop") as live:
-        update_layout(live, layout, cues)
+        update_layout(live, layout)
         mpv, _ = start_mpv(live, layout)
 
         @ mpv.property_observer("eof-reached")
         def handle_eof(name, value):
-            global playing_index
+            global cue_list
+
             if value == True:
                 mpv.stop()
-                playing_index = None
-                update_layout(live, layout, cues)
+                cue_list.playing_index = None
+                update_layout(live, layout)
 
         while True:
             try:
-                key = handle_keypress(mpv, cues)
-                update_layout(live, layout, cues, key)
+                key = handle_keypress(mpv)
+                update_layout(live, layout, key)
             except KeyboardInterrupt:
                 mpv.quit()
                 quit()

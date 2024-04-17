@@ -30,7 +30,7 @@ Cuelab will automatically convert text cues and metadata will be generated for o
 Keyboard shortcuts:
 - `UP`/`DOWN`: select previous/next cue
 - `Space`: play the currently selected cue and advance selection
-- `Esc`: stop playback and advance selection
+- `Esc`: stop playback
 - `f`: toggle fullscreen
 - `0`-`9`: show media on specified screen. Usually, 0 = primary screen, 1 = secondary screen etc.
 

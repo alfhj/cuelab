@@ -5,8 +5,9 @@ from pathlib import Path
 import random
 import shutil
 from config import BINARY_DIR, CUES_FILE
-from .constants import MEDIA_TYPE_EMOJI_MAP
+from .entities import Cue
 from . import lorem
+import string
 
 BINARIES = {"ffprobe": "", "mpv": ""}
 
@@ -51,12 +52,11 @@ def get_binaries():
             raise FileNotFoundError(f'{binary} was not found in "{BINARY_DIR}" or PATH')
 
 
-def generate_dummy_metadata(n=100):
-    return {
-        "cues": [{
-            "name": lorem.ipsum(40),
-            "type": random.choice(list(MEDIA_TYPE_EMOJI_MAP.keys())),
-            "duration": random.randint(0, 120),
-            "path": ""
-        } for _ in range(n)]
-    }
+def generate_dummy_cues(n=100):
+    return [Cue(
+        name=lorem.ipsum(50),
+        #name="".join(random.choice(string.ascii_letters) for _ in range(random.randint(40, 50))),
+        type=random.choice(list(Cue.type_emoji_map.keys())),
+        duration=random.randint(0, 120),
+        path=""
+    ) for _ in range(n)]

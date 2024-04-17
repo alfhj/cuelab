@@ -9,3 +9,4 @@ FONT = "tahoma.ttf"
 FONT_SIZE = 72  # px
 FONT_POSITION = 2  # percent from top
 LINE_SPACING = 1.15
+CUE_LIST_MIDDLE = 50 # percent from top where current cue should be
