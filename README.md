@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 ### Usage
 
-`python run.py`
+`python cuelab.py`
 
 Cuelab will automatically convert text cues and metadata will be generated for other cues using `ffprobe`
 

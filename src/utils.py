@@ -2,8 +2,10 @@ import json
 import logging
 import os
 from pathlib import Path
+import random
 import shutil
 from config import BINARY_DIR, CUES_FILE
+from .constants import MEDIA_TYPE_EMOJI_MAP
 from . import lorem
 
 BINARIES = {"ffprobe": "", "mpv": ""}
@@ -47,3 +49,14 @@ def get_binaries():
             BINARIES[binary] = path_file#.replace("COM", "EXE")
         else:
             raise FileNotFoundError(f'{binary} was not found in "{BINARY_DIR}" or PATH')
+
+
+def generate_dummy_metadata(n=100):
+    return {
+        "cues": [{
+            "name": lorem.ipsum(40),
+            "type": random.choice(list(MEDIA_TYPE_EMOJI_MAP.keys())),
+            "duration": random.randint(0, 120),
+            "path": ""
+        } for _ in range(n)]
+    }

@@ -1,11 +1,14 @@
+from readchar import key as special_keys
+from readchar import readkey
+from rich.columns import Columns
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
-from rich.columns import Columns
+from rich.table import Table
 from rich.text import Text
-from readchar import readkey
-from readchar import key as special_keys
 
+from .gui import Filelist
+from .constants import MEDIA_TYPE_EMOJI_MAP
 from .playback import start_mpv
 
 
@@ -58,6 +61,9 @@ def get_visible_filelist(cues: list, width: int, number_visible: int, selected_i
     visible_cues = cues[from_index:]  # rich will take care of cutting off the rest
     lines = Text()
     durations = Text(justify="right")
+    grid = Table.grid(expand=True)
+    grid.add_column(no_wrap=False, overflow="crop")
+    grid.add_column(justify="right")
     for i in range(len(visible_cues)):
         if local_playing_index is not None and i == local_playing_index:
             style = "bright_yellow"
@@ -66,10 +72,16 @@ def get_visible_filelist(cues: list, width: int, number_visible: int, selected_i
         else:
             style = "grey50"
         minutes, seconds = divmod(int(visible_cues[i]["duration"]), 60)
-        lines.append(visible_cues[i]["name"] + "\n", style=style)
-        durations.append(f"{minutes}:{seconds:02}\n", style=style)
+        icon = MEDIA_TYPE_EMOJI_MAP[visible_cues[i]["type"]]
+        lines.append(visible_cues[i]["name"][:10] + "\n", style=style)
+        durations.append(f"{minutes}:{seconds:02} {icon}\n", style=style)
+        if style:
+            grid.add_row(f"[{style}]{visible_cues[i]['name']}[/]", f"[{style}]{minutes}:{seconds:02} {icon}[/]")
+        else:
+            grid.add_row(visible_cues[i]["name"], f"{minutes}:{seconds:02} {icon}")
 
-    return lines, durations
+    #return Columns([lines, durations], expand=True)
+    return grid
 
 
 def handle_keypress(mpv, cues):
@@ -116,8 +128,8 @@ def update_layout(live: Live, layout: Layout, cues: list, pressed_key: bool = No
     height = live.console.height - 2
     if pressed_key:
         pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
-    visible_filelist, visible_durations = get_visible_filelist(cues, 0, height, selected_index, playing_index)
-    layout["left"].update(Panel(Columns([visible_filelist, visible_durations], expand=True)))
+    filelist = get_visible_filelist(cues, 0, height, selected_index, playing_index)
+    layout["left"].update(Panel(filelist))
     layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=selected_index, playing_index=playing_index, height=height))
     live.refresh()
 
@@ -134,7 +146,7 @@ def start(cues: list):
     screen_number = 0
     layout = make_layout()
 
-    with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
+    with Live(layout, screen=True, auto_refresh=False, refresh_per_second=4, vertical_overflow="crop") as live:
         update_layout(live, layout, cues)
         mpv, _ = start_mpv(live, layout)
 

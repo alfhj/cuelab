@@ -34,43 +34,43 @@ def clean_output_dir(output_dir: str):
                 file.unlink()
 
 
-def convert_text():
-    output_dir = Path(OUTPUT_DIR)
-    clean_output_dir(output_dir)
+#def convert_text():
+#    output_dir = Path(OUTPUT_DIR)
+#    clean_output_dir(output_dir)
 
-    log(f"Converting text cues to images", __name__)
-    text_cues = [cue for cue in get_filelist() if cue.startswith('"')]
-    for i, filename in enumerate(text_cues):
-        log(f"{i+1} / {len(text_cues)}", __name__)
-        text = filename[1:-1]
-        output_path = output_dir.joinpath(generate_filename(i))
-        generate_text_image(text, output_path)
+#    log(f"Converting text cues to images", __name__)
+#    text_cues = [cue for cue in get_filelist() if cue.startswith('"')]
+#    for i, filename in enumerate(text_cues):
+#        log(f"{i+1} / {len(text_cues)}", __name__)
+#        text = filename[1:-1]
+#        output_path = output_dir.joinpath(generate_filename(i))
+#        generate_text_image(text, output_path)
 
 
-def convert_and_copy():
-    output_dir = Path(OUTPUT_DIR)
-    clean_output_dir(output_dir)
+#def convert_and_copy():
+#    output_dir = Path(OUTPUT_DIR)
+#    clean_output_dir(output_dir)
 
-    log(f'Copying files to "{output_dir}"', __name__)
-    filelist = get_filelist()
-    playlist = ""
-    for i, filename in enumerate(filelist):
-        log(f"{i+1} / {len(filelist)}", __name__)
-        if filename.startswith('"'):  # subtitle
-            text = filename[1:-1]
-            output_path = output_dir.joinpath(generate_filename(i))
-            generate_text_image(text, output_path)
-        else:
-            input_path = Path(CUES_DIR).joinpath(filename)
-            if not input_path.is_file():
-                raise FileNotFoundError(f'Cue {filename} not found in "{CUES_DIR}"')
-            output_path = output_dir.joinpath(generate_filename(i, input_path.suffix))
-            shutil.copy(input_path, output_path)
+#    log(f'Copying files to "{output_dir}"', __name__)
+#    filelist = get_filelist()
+#    playlist = ""
+#    for i, filename in enumerate(filelist):
+#        log(f"{i+1} / {len(filelist)}", __name__)
+#        if filename.startswith('"'):  # subtitle
+#            text = filename[1:-1]
+#            output_path = output_dir.joinpath(generate_filename(i))
+#            generate_text_image(text, output_path)
+#        else:
+#            input_path = Path(CUES_DIR).joinpath(filename)
+#            if not input_path.is_file():
+#                raise FileNotFoundError(f'Cue {filename} not found in "{CUES_DIR}"')
+#            output_path = output_dir.joinpath(generate_filename(i, input_path.suffix))
+#            shutil.copy(input_path, output_path)
 
-        playlist += str(output_path.name) + "\n"
+#        playlist += str(output_path.name) + "\n"
 
-    with open(output_dir.joinpath("playlist.txt"), "w", encoding="utf-8", newline="\n") as f:
-        f.write(playlist)
+#    with open(output_dir.joinpath("playlist.txt"), "w", encoding="utf-8", newline="\n") as f:
+#        f.write(playlist)
 
 
 def get_cues_hash():
@@ -95,9 +95,6 @@ def get_media_info(file_path):
 
 def metadata_is_updated(metadata: dict):
     return metadata["hash"] == get_cues_hash()
-
-
-#def generate_metadata(metadata_file: Path):
 
 
 def convert() -> dict:

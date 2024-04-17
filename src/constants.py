@@ -11,9 +11,15 @@ LOG_LEVEL_MAP = { #  map from mpv to built-in log levels
     "debug": logging.DEBUG,
     "trace": logging.DEBUG,
 }
+#MEDIA_TYPE_EMOJI_MAP = {
+#    "text": "txt",
+#    "image": "img",
+#    "video": "vid",
+#    "audio": "snd"
+#}
 MEDIA_TYPE_EMOJI_MAP = {
     "text": "🔤",
-    "image": "🖼",
-    "video": "📽",
-    "audio": "🎶"
+    "image": "🎨",
+    "video": "🎥",
+    "audio": "🎵"
 }

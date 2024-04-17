@@ -1,7 +1,7 @@
 #import argparse
 import logging
 from src import application, convert_cues
-from src.utils import get_binaries, log
+from src.utils import get_binaries, log, generate_dummy_metadata
 
 if __name__ == "__main__":
     #parser = argparse.ArgumentParser(description="Cuelab")
@@ -15,4 +15,5 @@ if __name__ == "__main__":
     get_binaries()
     #if args.convert_text == True:
     metadata = convert_cues.convert()
+    metadata = generate_dummy_metadata()
     application.start(metadata["cues"])
