@@ -1,12 +1,9 @@
-from dataclasses import dataclass
-
 from rich.console import Console, ConsoleOptions, RenderResult
 
 from .entities import Cue
 from .utils import seconds_to_timestamp
 
 
-@dataclass
 class CueList:
     def __init__(self, cues: list[Cue], middle_position: float = 0.5):
         self.cues = cues
@@ -24,7 +21,6 @@ class CueList:
         local_selected_index = self.selected_index - from_index
         local_playing_index = self.playing_index - from_index if self.playing_index is not None else None
         visible_cues = self.cues[from_index:]  # rich will take care of cutting off the rest
-        lines = []
 
         for i, cue in enumerate(visible_cues):
             playing = False
@@ -36,8 +32,8 @@ class CueList:
             else:
                 style = "grey50"
 
-            cue_name = cue.name
-            cue_info = f"{seconds_to_timestamp(cue.duration)} {cue.get_emoji()}"
+            cue_name = f"{cue.get_emoji()} {cue.name}"
+            cue_info = f"{seconds_to_timestamp(cue.duration)}"
             if playing:
                 cue_info = f"{seconds_to_timestamp(self.current_seconds)} / {cue_info}"
 
@@ -50,10 +46,7 @@ class CueList:
             if style:
                 line = f"[{style}]{line}[/]"
 
-            #lines.append(line)
             yield line
-
-        #yield "\n".join(lines)
 
     def select_previous(self):
         self.selected_index = max(self.selected_index - 1, 0)
