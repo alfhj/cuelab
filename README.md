@@ -38,8 +38,10 @@ Keyboard shortcuts:
 
 - [ ] Prevent mpv from taking focus when starting cuelab
 - [ ] Support playback of multiple cues at the same time
-- [ ] Option to rescale the output to fit the projection surface
+- [ ] Option to rescale the output to a quadrangle to fit the projection surface
 - [ ] Improve loading of first cue
+- [ ] Implement a way to drag and drop files
+- [X] Option to rescale the output to fit the projection surface
 - [X] Show icon and length of each cue and update currently playing position
 
 ### Acknowledgements

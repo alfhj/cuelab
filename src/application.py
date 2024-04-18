@@ -103,7 +103,8 @@ def start(cues: list):
         @ mpv.property_observer("time-pos")
         def handle_eof(name, value):
             global cue_list
-            new_position, old_position = int(value), cue_list.current_seconds
+            new_position = int(value) if value else 0
+            old_position = cue_list.current_seconds
             cue_list.current_seconds = new_position
             update_layout(live, layout, refresh=new_position != old_position)
 
