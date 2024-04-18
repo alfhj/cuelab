@@ -1,11 +1,11 @@
-from io import StringIO
 import logging
+from io import StringIO
+
+from python_mpv_jsonipc import MPV
 from rich.panel import Panel
 from rich.text import Text
-from python_mpv_jsonipc import MPV
 
 from .constants import LOG_LEVEL_MAP
-
 from .utils import BINARIES
 
 
@@ -18,7 +18,7 @@ def start_mpv(live, layout):
     def log_mpv(level, prefix, text):
         mpv_logger.log(LOG_LEVEL_MAP[level], text)  # f"{prefix}: {text}")
         lines = log_stream.getvalue().splitlines()
-        text = Text("\n".join(lines[-live.console.height + 12 :]), overflow="crop", no_wrap=True)
+        text = Text("\n".join(lines[-live.console.height + 12:]), overflow="crop", no_wrap=True)
         layout["lower"].update(Panel(text))
 
     extra_config = {"config": "no", "include": "bin/mpv.conf"}

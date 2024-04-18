@@ -1,11 +1,12 @@
-import json
-from pathlib import Path
-import shutil
-import subprocess
-from PIL import Image, ImageDraw, ImageFont
 import hashlib
+import json
+import subprocess
+from pathlib import Path
 
-from config import CUES_DIR, CUES_FILE, METADATA_FILE, OUTPUT_DIR, WIDTH, HEIGHT, FONT, FONT_SIZE, FONT_POSITION, LINE_SPACING
+from PIL import Image, ImageDraw, ImageFont
+
+from config import CUES_DIR, CUES_FILE, FONT, FONT_POSITION, FONT_SIZE, HEIGHT, LINE_SPACING, METADATA_FILE, OUTPUT_DIR, WIDTH
+
 from .entities import Cue, CueType
 from .utils import BINARIES, dump_json, generate_filename, get_filelist, load_json, log
 

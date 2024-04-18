@@ -1,15 +1,11 @@
 from readchar import key as special_keys
 from readchar import readkey
-from rich.columns import Columns
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
 
 from config import CUE_LIST_MIDDLE
 
-from .entities import Cue
 from .gui import CueList
 from .playback import start_mpv
 
@@ -40,25 +36,9 @@ def get_book_variable_module_name(module_name):
     return book
 
 
-def get_visible_filelist(cues: list, width: int, number_visible: int, selected_index: int, playing_index=None, middle_index: int = None) -> list[str]:
-    """Gets the list of files which are visible within a certain number of lines
-
-    Args:
-        cues (list): metadata for each cue
-        width (int): horizontal width of the left panel
-        number_visible (int): number of files which are visible, usually around terminal height
-        index (int): index of the file currently selected
-        playing_index (int): index of the file currently playing
-        middle_index (int): index along the output where the currently selected file should appear. Defaults to number_visible // 2
-
-    Returns:
-        str: newline-separated string of filenames
-    """
-    pass
-
-
 def handle_keypress(mpv):
     global cue_list
+    global screen_number
 
     key = readkey()
 
@@ -83,18 +63,21 @@ def handle_keypress(mpv):
         mpv.set("fullscreen", "no")
         mpv.set("fs-screen", key)
         mpv.set("fullscreen", "yes")
+        screen_number = int(key)
 
     return key
 
 
-def update_layout(live: Live, layout: Layout, pressed_key: str = None):
+def update_layout(live: Live, layout: Layout, pressed_key: str = None, refresh: bool = True):
     global cue_list
+    global screen_number
 
     if pressed_key:
         pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
     layout["left"].update(Panel(cue_list))
-    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=cue_list.selected_index, playing_index=cue_list.playing_index))
-    live.refresh()
+    layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=cue_list.selected_index, playing_index=cue_list.playing_index, screen_number=screen_number))
+    if refresh:
+        live.refresh()
 
 
 def start(cues: list):
@@ -105,18 +88,24 @@ def start(cues: list):
     screen_number = 0
     layout = make_layout()
 
-    with Live(layout, screen=True, auto_refresh=False, refresh_per_second=4, vertical_overflow="crop") as live:
+    with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
         update_layout(live, layout)
         mpv, _ = start_mpv(live, layout)
 
         @ mpv.property_observer("eof-reached")
         def handle_eof(name, value):
             global cue_list
-
             if value == True:
                 mpv.stop()
                 cue_list.playing_index = None
                 update_layout(live, layout)
+
+        @ mpv.property_observer("time-pos")
+        def handle_eof(name, value):
+            global cue_list
+            new_position, old_position = int(value), cue_list.current_seconds
+            cue_list.current_seconds = new_position
+            update_layout(live, layout, refresh=new_position != old_position)
 
         while True:
             try:

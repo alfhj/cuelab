@@ -1,13 +1,15 @@
 import json
 import logging
 import os
-from pathlib import Path
 import random
 import shutil
-from config import BINARY_DIR, CUES_FILE
-from .entities import Cue
-from . import lorem
 import string
+from pathlib import Path
+
+from config import BINARY_DIR, CUES_FILE
+
+from . import lorem
+from .entities import Cue
 
 BINARIES = {"ffprobe": "", "mpv": ""}
 
@@ -60,3 +62,8 @@ def generate_dummy_cues(n=100):
         duration=random.randint(0, 120),
         path=""
     ) for _ in range(n)]
+
+
+def seconds_to_timestamp(duration):
+    minutes, seconds = divmod(int(duration), 60)
+    return f"{minutes}:{seconds:02}"

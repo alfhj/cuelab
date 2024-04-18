@@ -32,10 +32,6 @@ class Cue:
     def get_emoji(self):
         return self.type_emoji_map[self.type]
 
-    def get_duration_string(self):
-        minutes, seconds = divmod(int(self.duration), 60)
-        return f"{minutes}:{seconds:02}"
-
     def toJSON(self):
         return {
             "name": self.name,
