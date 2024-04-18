@@ -41,6 +41,7 @@ Keyboard shortcuts:
 - [ ] Option to rescale the output to a quadrangle to fit the projection surface
 - [ ] Improve loading of first cue
 - [ ] Implement a way to drag and drop files
+- [ ] Fix single press ESC on Linux
 - [X] Option to rescale the output to fit the projection surface
 - [X] Show icon and length of each cue and update currently playing position
 
