@@ -10,6 +10,45 @@ from .utils import BINARIES
 from config import WARP_MODE, WARP_PARAMS
 
 
+class MPVInstance:
+    def __init__(self):
+        self.instance: MPV = _start_mpv()
+        self.playing_path: str = None
+        self.position: int = None
+
+        @self.instance.property_observer("eof-reached")
+        def handle_eof(name, value):
+            global cue_list
+            if value == True:
+                mpv.stop()
+                cue_list.playing_index = None
+                update_layout(live, layout)
+
+        @mpv.property_observer("time-pos")
+        def handle_eof(name, value):
+            global cue_list
+            new_position = int(value) if value else 0
+            old_position = cue_list.current_seconds
+            cue_list.current_seconds = new_position
+            update_layout(live, layout, refresh=new_position != old_position)
+
+    def stop(self):
+        self.playing_path = None
+        self.instance.stop()
+
+    def play(self, path):
+        self.playing_path = path
+        self.instance.play(self.path)
+
+
+class MPVDaemon:
+    def __init__(self):
+        self.instances: list[MPVInstance] = None
+
+    def get_next_instance(self):
+        return next(instance for instance in self.instances if instance.playing_path is not None)
+
+
 def get_warp_params():
     if WARP_MODE == "none":
         return {}
@@ -34,7 +73,7 @@ def get_warp_params():
         raise ValueError(f"Warp mode {WARP_MODE} is incorrect")
 
 
-def start_mpv(live, layout):
+def _start_mpv():
     log_stream = StringIO()
     handler = logging.StreamHandler(log_stream)
     mpv_logger = logging.getLogger("mpv")
@@ -43,8 +82,9 @@ def start_mpv(live, layout):
     def log_mpv(level, prefix, text):
         mpv_logger.log(LOG_LEVEL_MAP[level], text)  # f"{prefix}: {text}")
         lines = log_stream.getvalue().splitlines()
-        text = Text("\n".join(lines[-live.console.height + 12:]), overflow="crop", no_wrap=True)
+        text = Text("\n".join(lines[-height + 12:]), overflow="crop", no_wrap=True)
         layout["lower"].update(Panel(text))
+
     extra_config = {
         "config": "no",
         "include": "bin/mpv.conf",
@@ -53,4 +93,4 @@ def start_mpv(live, layout):
     mpv = MPV(mpv_location=BINARIES["mpv"], loglevel="info", log_handler=log_mpv, **extra_config)
     mpv.set("fullscreen", "yes")  #  workaround for --fs --fs-screen=X not working
 
-    return mpv, log_stream
+    return mpv

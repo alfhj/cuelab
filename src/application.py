@@ -4,7 +4,7 @@ from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
 
-from config import CUE_LIST_MIDDLE
+from config import CUE_LIST_MIDDLE, NUM_INSTANCES
 
 from .gui import CueList
 from .playback import start_mpv
@@ -39,8 +39,10 @@ def get_book_variable_module_name(module_name):
 def handle_keypress(mpv):
     global cue_list
     global screen_number
+    global pressed_key
 
     key = readkey()
+    pressed_key = next((k for k, v in special_keys.__dict__.items() if not key.startswith("_") and key == v), key)
 
     if key == special_keys.UP:
         cue_list.select_previous()
@@ -68,12 +70,11 @@ def handle_keypress(mpv):
     return key
 
 
-def update_layout(live: Live, layout: Layout, pressed_key: str = None, refresh: bool = True):
+def update_layout(live: Live, layout: Layout, refresh: bool = True):
     global cue_list
     global screen_number
+    global pressed_key
 
-    if pressed_key:
-        pressed_key = next((k for k, v in special_keys.__dict__.items() if not pressed_key.startswith("_") and pressed_key == v), pressed_key)
     layout["left"].update(Panel(cue_list))
     layout["upper"].update(get_debug_panel(key=pressed_key, selected_index=cue_list.selected_index, playing_index=cue_list.playing_index, screen_number=screen_number))
     if refresh:
@@ -83,30 +84,17 @@ def update_layout(live: Live, layout: Layout, pressed_key: str = None, refresh: 
 def start(cues: list):
     global cue_list
     global screen_number
+    global pressed_key
 
     cue_list = CueList(cues, middle_position=CUE_LIST_MIDDLE/100)
     screen_number = 0
+    pressed_key = None
     layout = make_layout()
 
     with Live(layout, screen=True, auto_refresh=True, refresh_per_second=4, vertical_overflow="crop") as live:
         update_layout(live, layout)
-        mpv, _ = start_mpv(live, layout)
 
-        @ mpv.property_observer("eof-reached")
-        def handle_eof(name, value):
-            global cue_list
-            if value == True:
-                mpv.stop()
-                cue_list.playing_index = None
-                update_layout(live, layout)
-
-        @ mpv.property_observer("time-pos")
-        def handle_eof(name, value):
-            global cue_list
-            new_position = int(value) if value else 0
-            old_position = cue_list.current_seconds
-            cue_list.current_seconds = new_position
-            update_layout(live, layout, refresh=new_position != old_position)
+        mpv_list = [start_mpv(live, layout) for _ in range(NUM_INSTANCES)]
 
         while True:
             try:
