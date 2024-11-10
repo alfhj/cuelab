@@ -28,9 +28,9 @@ pip install -r requirements.txt
 Cuelab will automatically convert text cues and metadata will be generated for other cues using `ffprobe`
 
 Keyboard shortcuts:
-- `UP`/`DOWN`: select previous/next cue
+- `UP` / `DOWN`: select previous/next cue
 - `Space`: play the currently selected cue and advance selection
-- `Esc`: stop playback
+- `Esc` / `q`: stop playback
 - `f`: toggle fullscreen
 - `0`-`9`: show media on specified screen. Usually, 0 = primary screen, 1 = secondary screen etc.
 

@@ -52,7 +52,7 @@ def handle_keypress(mpv):
         cue = cue_list.play_selected()
         mpv.play(cue.path)
 
-    if key == special_keys.ESC:
+    if key == special_keys.ESC or key == "q":
         cue_list.stop_playing()
         mpv.stop()
 
